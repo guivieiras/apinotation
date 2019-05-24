@@ -148,21 +148,24 @@ tag -> word {% data => ({[data[0]]: {}}) %}
 ContentType -> "json"i {% id %} | "text"i {% id %} | "xml"i {% id %} 
 
 
-Response -> "@Response" _ [0-9] [0-9] [0-9] (_ ResponseRest):? ("\n" Headers):? {% data=> {
+Response -> "@Response" _ threeNumb (_ ResponseRest):? ("\n" Headers):? {% data=> {
    let obj = {
       type: data[0], 
-      code: data[2] +data[3] + data[4],
-      headers: data[6] ? data[6][1] : null, 
+      code: data[2],
+      headers: data[4] ? data[4][1] : null, 
    }
-   if (data[5]){
-      obj = {...obj, ...data[5][1]}
+   if (data[3]){
+      obj = {...obj, ...data[3][1]}
    }
    return obj
 } %}
 ResponseRest -> "json" _ json {% data=> ({contentType: data[0], json: data[2]})  %} 
 
+threeNumb -> [0-9] [0-9] [0-9] {% data => data[0] + data[1] + data[2]  %}
+
 Headers -> Header "\n" Headers {% data => ({...data[0], ...data[2]}) %} | Header {% id %}
-Header -> "@Header" _ ("Set-cookie"|"Content-type") _ Description {% data => ({ [data[2]]: data[4] }) %}
+Header -> "@Header" _ headerKey _ Description {% data => ({ [data[2]]: data[4] }) %}
 
 _ -> " "
-# validKey -> "a"
+
+headerKey -> [a-zA-Z] [a-zA-Z0-9\-]:+ {% (data) => data[0] + data[1].join("") %}
