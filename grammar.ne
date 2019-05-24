@@ -3,24 +3,6 @@
 
 @{%
 
-const moo = require('moo')
-
-let lexer = moo.compile({
-    space: {match: /\s+/, lineBreaks: true},
-    number: /-?(?:[0-9]|[1-9][0-9]+)(?:\.[0-9]+)?(?:[eE][-+]?[0-9]+)?\b/,
-    string: /"(?:\\["bfnrt\/\\]|\\u[a-fA-F0-9]{4}|[^"\\])*"/,
-    '{': '{',
-    '}': '}',
-    '[': '[',
-    ']': ']',
-    ',': ',',
-    ':': ':',
-    '@Route': '@',
-    true: 'true',
-    false: 'false',
-    null: 'null',
-})
-
   function groupObj(obj, key, subKey){
        let arrays = {}
       if (!obj){
@@ -76,11 +58,9 @@ let lexer = moo.compile({
    }
 %}
 
-# @lexer lexer
-
 Main -> Line "\n" Main {% (data) => [...data[0], ...data[2]] %} | Line {% id %}
 Line -> Route | Params  | Body | QueryInfos | Response
-Route -> "@Route" _ Method  _ Url (" " Description {% (d) => d[1].join("") %}):? 
+Route -> "@Route" _ Method  _ Url (" " Description {% (d) => d[1] %}):? 
  {% 
 (data) => 
 	({
@@ -97,23 +77,23 @@ Method -> "post"i {% idLower %} | "get"i {% idLower %}
 
 Url ->  "/" word [/]:? Url {% (data) => 
    ({
-      url: data[1].join(""), 
+      url: data[1], 
       rest: data[3] 
    }) %} 
    | "/" ":" word Url {% (data)  => 
    ({
-      params: data[2].join(""), 
-      url: ":" + data[2].join(""),  
+      params: data[2], 
+      url: ":" + data[2],  
       rest: data[3] 
    }) %}
    | "?" QueryRep {% (data)  => ({query: data[1]})  %}
    | null
 
 QueryRep -> Query "," QueryRep {% (data) => [...[data[0]], ...data[2]] %}  | Query
-Query -> word  {% idJoin %} 
+Query -> word  {% id %} 
 
-word -> [a-zA-Z]:+ {% id %}
-Description -> [a-z A-Z\-]:+ {% id %}
+word -> [a-zA-Z]:+ {% idJoin %}
+Description -> [a-zA-Z] [a-zA-Z0-9\- ]:+ {% (data) => data[0] + data[1].join("") %}
 
 
 Params -> "@Params" _ ParamRep {% (data) => 
@@ -126,25 +106,26 @@ ParamRep -> Param ", " ParamRep {% (data) =>
    [...[data[0]], ...data[2]] 
 %}  
    | Param 
-Param -> word (": " Description {% (d) => d[1].join("") %}):?  {% (data) => 
+Param -> word (": " Description {% (d) => d[1] %}):?  {% (data) => 
    ({
-      [data[0].join("")]: data[1]
+      [data[0]]: data[1]
    })  
 %} 
 
 QueryInfos -> "@Query" _ QueryInfoRep {% (data) => 
-({
-   type: data[0], 
-   query: data[2] 
-}) %}
+   ({
+      type: data[0], 
+      query: data[2] 
+   }) 
+%}
 
 QueryInfoRep -> QueryInfo ", " QueryInfoRep {% (data) => 
    [...[data[0]], ...data[2]] 
 %}  
    | QueryInfo 
-QueryInfo -> word (": " Description {% (d) => d[1].join("") %}):?  {% (data) => 
+QueryInfo -> word (": " Description {% (d) => d[1] %}):?  {% (data) => 
    ({
-      [data[0].join("")]: data[1]
+      [data[0]]: data[1]
    })  
 %} 
 
@@ -155,18 +136,30 @@ BodyRest -> "json" _ json {% data=> ({contentType: data[0], json: data[2]})  %}
 
 json -> "{ " tagRep " }" {% data=> data[1]  %}
 tagRep -> tag ", " tagRep {% data=> ({...data[0], ...data[2]})  %} | tag {% id %}
-tag -> word {% data => ({[idJoin(data)]: {}}) %} 
-      | word ": " json {% data => ({[idJoin(data)]: data[2]}) %}
-      | word ": \"" Description "\"" {% data => ({[idJoin(data)]: data[2].join("")}) %}
+tag -> word {% data => ({[data[0]]: {}}) %} 
+      | word ": " json {% data => ({[data[0]]: data[2]}) %}
+      | word ": \"" Description "\"" {% data => ({[data[0]]: data[2]}) %}
+      | word ": [" json "]" {% data => ({[data[0]]: [data[2]]}) %}
+      | word ": [ " json " ]" {% data => ({[data[0]]: [data[2]]}) %}
 
 
 ContentType -> "json"i {% id %} | "text"i {% id %} | "xml"i {% id %} 
 
 
-Response -> "@Response" _ [0-9] [0-9] [0-9] _ ResponseRest ("\n" Headers):? {% data=> ({type: data[0], code: data[2] +data[3]+data[4] , ...data[6]}) %}
+Response -> "@Response" _ [0-9] [0-9] [0-9] (_ ResponseRest):? ("\n" Headers):? {% data=> {
+   let obj = {
+      type: data[0], 
+      code: data[2] +data[3] + data[4],
+      headers: data[6] ? data[6][1] : null, 
+   }
+   if (data[5]){
+      obj = {...obj, ...data[5][1]}
+   }
+   return obj
+} %}
 ResponseRest -> "json" _ json {% data=> ({contentType: data[0], json: data[2]})  %} 
 
-Headers -> Header "\n" Headers | Header
-Header -> "@Header" _ ("Set-cookie"|"Content-Type") _ Description
+Headers -> Header "\n" Headers {% data => ({...data[0], ...data[2]}) %} | Header {% id %}
+Header -> "@Header" _ ("Set-cookie"|"Content-type") _ Description {% data => ({ [data[2]]: data[4] }) %}
 
 # validKey -> "a"

@@ -1,6 +1,13 @@
-@Route POST /auth/signin
-@Body json { email, password, casaDahora: { teste, testedawda } }
+@Route POST /auth/signin/:rota/outra?querya,queryb Gostei disso
+@Query querya: teste, queryb: outro teste
+@Params rota: bela tentativa
+@Body json { email, password, casaDahora: { teste, testedawda: "zika ne" } }
 @Response 200 json { email, name, avatar, id, casaDahora: { teste, testex } }
+@Header Set-cookie batataaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa frita
+@Header Content-type batataaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa frita
 @Response 400 json { error: "User not found" }
+@Header Set-cookie batataaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa frita
 @Response 400 json { error: "User e-mail not verified" }
 @Response 400 json { error: "Invalid password" }
+@Response 200
+@Response 400 json { error: "ValidationError", errors: [ { field, message } ] }
