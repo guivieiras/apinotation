@@ -1,4 +1,4 @@
-@builtin "whitespace.ne" # _ means arbitrary amount of whitespace
+# @builtin "whitespace.ne" # _ means arbitrary amount of whitespace
 @builtin "number.ne"
 
 @{%
@@ -57,6 +57,7 @@
       return data[0].join("")
    }
 %}
+
 
 Main -> Line "\n" Main {% (data) => [...data[0], ...data[2]] %} | Line {% id %}
 Line -> Route | Params  | Body | QueryInfos | Response
@@ -138,6 +139,7 @@ json -> "{ " tagRep " }" {% data=> data[1]  %}
 tagRep -> tag ", " tagRep {% data=> ({...data[0], ...data[2]})  %} | tag {% id %}
 tag -> word {% data => ({[data[0]]: {}}) %} 
       | word ": " json {% data => ({[data[0]]: data[2]}) %}
+      | word ": '" Description "'" {% data => ({[data[0]]: data[2]}) %}
       | word ": \"" Description "\"" {% data => ({[data[0]]: data[2]}) %}
       | word ": [" json "]" {% data => ({[data[0]]: [data[2]]}) %}
       | word ": [ " json " ]" {% data => ({[data[0]]: [data[2]]}) %}
@@ -162,4 +164,5 @@ ResponseRest -> "json" _ json {% data=> ({contentType: data[0], json: data[2]}) 
 Headers -> Header "\n" Headers {% data => ({...data[0], ...data[2]}) %} | Header {% id %}
 Header -> "@Header" _ ("Set-cookie"|"Content-type") _ Description {% data => ({ [data[2]]: data[4] }) %}
 
+_ -> " "
 # validKey -> "a"
