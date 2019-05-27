@@ -59,19 +59,36 @@
 %}
 
 
-Main -> Line "\n" Main {% (data) => [...data[0], ...data[2]] %} | Line {% id %}
-Line -> Route | Params  | Body | QueryInfos | Response
-Route -> "@Route" _ Method  _ Url (" " Description {% (d) => d[1] %}):? 
+# Main -> Line "\n" Main {% (data) => [...data[0], ...data[2]] %} | Line {% id %}
+Routes -> Route "\n" Routes | Route
+Others -> Params {% id %} | Body {% id %} | QueryInfos {% id %} | Response {% id %} 
+Route -> "@Route" _ Method  _ Url (" " Description {% (d) => d[1] %}):?  ("\n" Others):*
  {% 
-(data) => 
-	({
+(data) => {
+   let toReturn = {
       type: data[0], 
       method: data[2], 
       description: data[5], 
       url: group(data[4], 'url', 'rest').join("/"), 
       params: groupObj(data[4], 'params', 'rest'), 
-      query: getFirstObj(data[4], 'query','rest') 
-   }) %}
+      query: getFirstObj(data[4], 'query','rest'),
+   }
+   let stuff = data[6].map(x=>x[1]) 
+   let queryInfos = stuff.find(x=> x.type == "@Query")
+   let responses = stuff.filter(x=> x.type == '@Response')
+   let body = stuff.find(x => x.type == "@Body")
+   let paramsInfo = stuff.find(x => x.type == "@Params")
+
+   let toMerge = {
+      body,
+      queryInfos,
+      responses,
+      paramsInfo
+   }
+   
+
+	return {...toReturn, ...toMerge}
+   } %}
 
 Method -> "post"i {% idLower %} | "get"i {% idLower %}
 
@@ -87,11 +104,10 @@ Url ->  "/" word [/]:? Url {% (data) =>
       url: ":" + data[2],  
       rest: data[3] 
    }) %}
-   | "?" QueryRep {% (data)  => ({query: data[1]})  %}
+   | "?" QueryRep {% (data)  => ({query: data[1]  })  %}
    | null
 
-QueryRep -> Query "," QueryRep {% (data) => [...[data[0]], ...data[2]] %}  | Query
-Query -> word  {% id %} 
+QueryRep -> word "," QueryRep {% (data) => [...[data[0]], ...data[2]] %}  | word
 
 word -> [a-zA-Z]:+ {% idJoin %}
 Description -> [a-zA-Z] [a-zA-Z0-9\- ]:+ {% (data) => data[0] + data[1].join("") %}
@@ -116,7 +132,7 @@ Param -> word (": " Description {% (d) => d[1] %}):?  {% (data) =>
 QueryInfos -> "@Query" _ QueryInfoRep {% (data) => 
    ({
       type: data[0], 
-      query: data[2] 
+      query: data[2]
    }) 
 %}
 
@@ -124,6 +140,7 @@ QueryInfoRep -> QueryInfo ", " QueryInfoRep {% (data) =>
    [...[data[0]], ...data[2]] 
 %}  
    | QueryInfo 
+
 QueryInfo -> word (": " Description {% (d) => d[1] %}):?  {% (data) => 
    ({
       [data[0]]: data[1]
@@ -135,7 +152,15 @@ Body -> "@Body" _ BodyRest {% data=> ({type: data[0], ...data[2]}) %}
 BodyRest -> "json" _ json {% data=> ({contentType: data[0], json: data[2]})  %} 
 
 
-json -> "{ " tagRep " }" {% data=> data[1]  %}
+json -> "{ " ("...$" word ", " {% data =>  data[1]  %}):* tagRep " }" {% data=> {
+   let toReturn = data[2]
+   if (data[1].length > 0){
+      return {...toReturn, $spread: data[1]}
+   }
+   return toReturn
+} %}
+ | "$" word {% data => '$' + data[1] %}
+
 tagRep -> tag ", " tagRep {% data=> ({...data[0], ...data[2]})  %} | tag {% id %}
 tag -> word {% data => ({[data[0]]: {}}) %} 
       | word ": " json {% data => ({[data[0]]: data[2]}) %}
@@ -143,6 +168,7 @@ tag -> word {% data => ({[data[0]]: {}}) %}
       | word ": \"" Description "\"" {% data => ({[data[0]]: data[2]}) %}
       | word ": [" json "]" {% data => ({[data[0]]: [data[2]]}) %}
       | word ": [ " json " ]" {% data => ({[data[0]]: [data[2]]}) %}
+      
 
 
 ContentType -> "json"i {% id %} | "text"i {% id %} | "xml"i {% id %} 
