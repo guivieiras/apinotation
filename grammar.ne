@@ -62,7 +62,11 @@
 # Main -> Line "\n" Main {% (data) => [...data[0], ...data[2]] %} | Line {% id %}
 Routes -> Route "\n" Routes | Route
 Others -> Params {% id %} | Body {% id %} | QueryInfos {% id %} | Response {% id %} 
-Route -> "@Route" _ Method  _ Url (" " Description {% (d) => d[1] %}):?  ("\n" Others):*
+Route -> "@Route" _ Method  _ Url (" " Description {% (d) => d[1] %}):?  
+("\n" Params {% data => data[1] %}):? 
+("\n" QueryInfos {% data => data[1].query %}):?  
+("\n" Body {% data => data[1] %}):? 
+("\n" Response {% data => data[1] %}):*
  {% 
 (data) => {
    let toReturn = {
@@ -72,18 +76,18 @@ Route -> "@Route" _ Method  _ Url (" " Description {% (d) => d[1] %}):?  ("\n" O
       url: group(data[4], 'url', 'rest').join("/"), 
       params: groupObj(data[4], 'params', 'rest'), 
       query: getFirstObj(data[4], 'query','rest'),
+      data
    }
-   let stuff = data[6].map(x=>x[1]) 
-   let queryInfos = stuff.find(x=> x.type == "@Query")
-   let responses = stuff.filter(x=> x.type == '@Response')
-   let body = stuff.find(x => x.type == "@Body")
-   let paramsInfo = stuff.find(x => x.type == "@Params")
+   var paramsInfo = data[6]
+   let queryInfos = data[7] 
+   let responses = data[9]
+   let body = data[8]
 
    let toMerge = {
+      paramsInfo,
       body,
       queryInfos,
       responses,
-      paramsInfo
    }
    
 
@@ -162,7 +166,8 @@ json -> "{ " ("...$" word ", " {% data =>  data[1]  %}):* tagRep " }" {% data=> 
  | "$" word {% data => '$' + data[1] %}
 
 tagRep -> tag ", " tagRep {% data=> ({...data[0], ...data[2]})  %} | tag {% id %}
-tag -> word {% data => ({[data[0]]: {}}) %} 
+
+tag -> word {% data => ({[data[0]]: String}) %} 
       | word ": " json {% data => ({[data[0]]: data[2]}) %}
       | word ": '" Description "'" {% data => ({[data[0]]: data[2]}) %}
       | word ": \"" Description "\"" {% data => ({[data[0]]: data[2]}) %}
