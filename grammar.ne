@@ -1,54 +1,7 @@
 # @builtin "whitespace.ne" # _ means arbitrary amount of whitespace
 @builtin "number.ne"
 
-@{%
-
-  function groupObj(obj, key, subKey){
-       let arrays = {}
-      if (!obj){
-         return arrays;
-      }
-      if (obj[key]){
-         arrays = {...arrays, [obj[key]]:{}}
-      }
-      if (obj[subKey]){
-         return {...arrays, ...groupObj(obj[subKey], key, subKey)}
-      }
-      return arrays
-   }
-
-   function group(obj, key, subKey){
-       let arrays = []
-      if (!obj){
-         return arrays;
-      }
-      if (obj[key]){
-         arrays.push(obj[key])
-      }
-      if (obj[subKey]){
-         return [...arrays, ... group(obj[subKey], key, subKey)]
-      }
-      return arrays
-   }
-
-   function getFirst(data, key, subKey){
-      if (data[key]){
-         return data[key]
-      }if (data[subKey]){
-         return getFirst(data[subKey], key, subKey)
-      }
-      return null;
-   }
-
-   function getFirstObj(data, key, subKey){
-      if (data[key]){
-         return Object.values(data[key]).map(k => ({[k]: {}}))
-      }if (data[subKey]){
-         return getFirstObj(data[subKey], key, subKey)
-      }
-      return null;
-   }
-  
+@{% 
    function idLower(data){
       return data[0].toUpperCase()
    }
@@ -60,11 +13,11 @@
 
 
 # Main -> Line "\n" Main {% (data) => [...data[0], ...data[2]] %} | Line {% id %}
-Routes -> Route "\n" Routes | Route
+Routes -> Route "\n" Routes {% (data) => [data[0], ...data[2]] %}  | Route 
 Others -> Params {% id %} | Body {% id %} | QueryInfos {% id %} | Response {% id %} 
 Route -> "@Route" _ Method  _ Url (" " Description {% (d) => d[1] %}):?  
 ("\n" Params {% data => data[1] %}):? 
-("\n" QueryInfos {% data => data[1].query %}):?  
+("\n" QueryInfos {% data => data[1] %}):?  
 ("\n" Body {% data => data[1] %}):? 
 ("\n" Response {% data => data[1] %}):*
  {% 
@@ -73,55 +26,63 @@ Route -> "@Route" _ Method  _ Url (" " Description {% (d) => d[1] %}):?
       type: data[0], 
       method: data[2], 
       description: data[5], 
-      url: group(data[4], 'url', 'rest').join("/"), 
-      params: groupObj(data[4], 'params', 'rest'), 
-      query: getFirstObj(data[4], 'query','rest'),
-      data
+      url: data[4].url, 
+      params: data[4].params,
+      query: data[4].query,
+      paramsInfo: data[6],
+      queryInfos: data[7],
+      body: data[8],
+      responses: data[9],
    }
-   var paramsInfo = data[6]
-   let queryInfos = data[7] 
-   let responses = data[9]
-   let body = data[8]
-
-   let toMerge = {
-      paramsInfo,
-      body,
-      queryInfos,
-      responses,
-   }
-   
-
-	return {...toReturn, ...toMerge}
-   } %}
+	return toReturn
+} %}
 
 Method -> "post"i {% idLower %} | "get"i {% idLower %}
 
 
-Url ->  "/" word [/]:? Url {% (data) => 
-   ({
-      url: data[1], 
-      rest: data[3] 
-   }) %} 
-   | "/" ":" word Url {% (data)  => 
-   ({
-      params: data[2], 
-      url: ":" + data[2],  
-      rest: data[3] 
-   }) %}
-   | "?" QueryRep {% (data)  => ({query: data[1]  })  %}
-   | null
+Url ->  "/" word (Url):? {% data => {
+   if(data[2] && data[2][0].url){
+      return {
+         url: [ data[1],  ...data[2][0].url ], 
+         params: data[2][0].params,
+         query: data[2] ? data[2][0].query : null
+      }
+   }
+   return {
+      url: [ data[1]] ,
+      query: data[2] ? data[2][0].query : null
+   }
+}
+    %}
+   | "/:" word (Url):?
+{% data => {
 
-QueryRep -> word "," QueryRep {% (data) => [...[data[0]], ...data[2]] %}  | word
+   if(data[2] && data[2][0].params){
+      return {
+         url: [ data[1],  ...data[2][0].url ], 
+         params: [data[1],  ...data[2][0].params ],
+         query: data[2] ? data[2][0].query : null
+      }
+   }
+   return {
+      url: [data[1]], 
+      params:  [data[1]],
+      query: data[2] ? data[2][0].query : null
+   }
+}
+%}
+
+   | "?" QueryRep {% data => ({query: data[1]}) %}
+
+QueryRep -> word "," QueryRep {% (data) => [data[0], ...data[2]] %}  | word
 
 word -> [a-zA-Z]:+ {% idJoin %}
 Description -> [a-zA-Z] [a-zA-Z0-9\- ]:+ {% (data) => data[0] + data[1].join("") %}
 
 
 Params -> "@Params" _ ParamRep {% (data) => 
-({
-   type: data[0], 
-   params: data[2] 
-}) %}
+   data[2].reduce((x,y) => ({...x, ...y}), {}) 
+ %}
 
 ParamRep -> Param ", " ParamRep {% (data) => 
    [...[data[0]], ...data[2]] 
@@ -133,12 +94,7 @@ Param -> word (": " Description {% (d) => d[1] %}):?  {% (data) =>
    })  
 %} 
 
-QueryInfos -> "@Query" _ QueryInfoRep {% (data) => 
-   ({
-      type: data[0], 
-      query: data[2]
-   }) 
-%}
+QueryInfos -> "@Query" _ QueryInfoRep {% (data) => data[2].reduce((x,y) => ({...x, ...y}), {}) %}
 
 QueryInfoRep -> QueryInfo ", " QueryInfoRep {% (data) => 
    [...[data[0]], ...data[2]] 
