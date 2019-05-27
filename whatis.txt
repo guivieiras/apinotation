@@ -1,4 +1,5 @@
 @Route POST /auth/signin/:rota/outra?querya,queryb Gostei disso
+@Route POST /auth/signin/:rota/outra?querya,queryb Gostei disso tambem
 @Params rota: bela tentativa
 @Query querya: teste, queryb: outro teste
 @Body json { email, password, casaDahora: { teste, testedawda: "zika ne" } }

@@ -26,7 +26,7 @@ Route -> "@Route" _ Method  _ Url (" " Description {% (d) => d[1] %}):?
       type: data[0], 
       method: data[2], 
       description: data[5], 
-      url: data[4].url, 
+      url: data[4].url.join("/"), 
       params: data[4].params,
       query: data[4].query,
       paramsInfo: data[6],
@@ -123,7 +123,7 @@ json -> "{ " ("...$" word ", " {% data =>  data[1]  %}):* tagRep " }" {% data=> 
 
 tagRep -> tag ", " tagRep {% data=> ({...data[0], ...data[2]})  %} | tag {% id %}
 
-tag -> word {% data => ({[data[0]]: String}) %} 
+tag -> word {% data => ({[data[0]]: "String"}) %} 
       | word ": " json {% data => ({[data[0]]: data[2]}) %}
       | word ": '" Description "'" {% data => ({[data[0]]: data[2]}) %}
       | word ": \"" Description "\"" {% data => ({[data[0]]: data[2]}) %}
