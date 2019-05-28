@@ -51,7 +51,7 @@
 								</v-list-tile>
 							</template>
 
-							<v-list-tile :href="'#'+ route.url" v-for="route of resolved">
+							<v-list-tile :href="'#'+ route.url" v-for="route of resolved.reduce( (a,b) => [...a,...b.routes], [])">
 								<v-list-tile-action>
 									<v-icon>web</v-icon>
 								</v-list-tile-action>
@@ -68,28 +68,31 @@
 							<v-expansion-panel expand>
 								<v-expansion-panel-content v-for="group in resolved">
 									<template v-slot:header>
-										<div>
+										<h2>
 											{{ group.groupName }}
-										</div>
+										</h2>
 									</template>
 									<v-expansion-panel expand>
 										<v-expansion-panel-content v-for="route in group.routes">
 											<template v-slot:header>
-												<div>{{ route.method }} {{ route.url }} {{ route.description ? ' - ' + route.description : '' }}</div>
+												<h3 :style="{color: getColor(route.method)}" :id="route.url">
+													{{ route.method }} {{ route.url }} {{ route.description ? ' - ' + route.description : '' }}
+												</h3>
 											</template>
 											<v-card>
 												<v-card-text>
-													<div v-if="route.paramsInfo">
-														<h3>Params</h3>
-														<h4 v-for="param of route.params">{{ param }}: {{ route.paramsInfo[param] }}</h4>
-													</div>
+													<div v-if="route.paramsInfo || route.queryInfos" class="pa-3 elevation-3 mb-3">
+														<div v-if="route.paramsInfo">
+															<h3>Params</h3>
+															<h4 v-for="param of route.params">{{ param }}: {{ route.paramsInfo[param] }}</h4>
+														</div>
 
-													<div v-if="route.queryInfos">
-														<h3>Query infos</h3>
-														<h4 v-for="param of route.query">{{ param }}: {{ route.queryInfos[param] }}</h4>
+														<div v-if="route.queryInfos">
+															<h3>Query infos</h3>
+															<h4 v-for="param of route.query">{{ param }}: {{ route.queryInfos[param] }}</h4>
+														</div>
 													</div>
-
-													<div v-if="route.body">
+													<div class="mb-2 pa-3 elevation-3" v-if="route.body">
 														<h3>Body</h3>
 														<h4>Content-type: {{ route.body.contentType }}</h4>
 														<code v-if="route.body.contentType == 'json'">{{
@@ -97,7 +100,7 @@
 														}}</code>
 													</div>
 
-													<div v-if="route.responses.length > 0">
+													<div class="mb-2 pa-3 elevation-3" v-if="route.responses.length > 0">
 														<h3>Responses</h3>
 														<div v-for="response of route.responses">
 															<h4>Code: {{ response.code }} Content-Type: {{ response.contentType }}</h4>
@@ -111,17 +114,18 @@
 																<h4 v-for="header of Object.keys(response.headers)">
 																	{{ header }} - {{ response.headers[header] }}
 																</h4>
-																<hr />
 															</div>
-														</div></div
-												></v-card-text>
+															<v-divider class="my-2"></v-divider>
+														</div>
+													</div>
+												</v-card-text>
 											</v-card>
 										</v-expansion-panel-content>
 									</v-expansion-panel>
 								</v-expansion-panel-content>
 							</v-expansion-panel>
 
-							<gdrawer title="Banana">
+							<gdrawer title="Call it">
 								<div v-if="clickedRoute">
 									{{ clickedRoute.url }}
 								</div>
@@ -167,6 +171,18 @@
 					botao(mensagem) {
 						alert(mensagem)
 					},
+					getColor(method) {
+						switch (method) {
+							case 'POST':
+								return '#1976d2'
+							case 'GET':
+								return '#4caf50'
+							case 'DELETE':
+								return '#f44336'
+							case 'PUT':
+								return '#fb8c00'
+						}
+					},
 					handleErrors(error) {
 						console.log(error)
 						if (error.response.data.errors) {
@@ -193,6 +209,9 @@
 			}
 			code::before {
 				content: '';
+			}
+			.application {
+				font-family: monospace;
 			}
 		</style>
 	</body>

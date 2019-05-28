@@ -28,7 +28,7 @@ Route -> "@Route" _ Method  _ Url (" " Description {% (d) => d[1] %}):?
       type: data[0], 
       method: data[2], 
       description: data[5], 
-      url: data[4].url.join("/"), 
+      url: "/" + data[4].url.join("/"), 
       params: data[4].params,
       query: data[4].query,
       paramsInfo: data[6],
