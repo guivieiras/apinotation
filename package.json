@@ -8,10 +8,10 @@
 		"mine": "nodemon --exec \"nearleyc grammar.ne -o grammar.js && babel-node index.js\" --watch grammar.ne --watch whatis.txt"
 	},
 	"devDependencies": {
-		"@babel/cli": "7.4.4",
-		"@babel/core": "7.4.4",
-		"@babel/node": "7.2.2",
-		"@babel/preset-env": "7.4.4",
+		"@babel/cli": "^7.4.4",
+		"@babel/core": "^7.4.5",
+		"@babel/node": "^7.4.5",
+		"@babel/preset-env": "^7.4.5",
 		"nodemon": "^1.19.1"
 	},
 	"author": "",
