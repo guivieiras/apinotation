@@ -5,7 +5,7 @@
 	"main": "index.js",
 	"scripts": {
 		"start": "babel-node index.js",
-		"mine": "nodemon --exec \"nearleyc grammar.ne -o grammar.js && babel-node index2.js\" --watch grammar.ne --watch whatis.txt"
+		"mine": "nodemon --exec \"nearleyc grammar.ne -o grammar.js && babel-node index.js\" --watch grammar.ne --watch whatis.txt"
 	},
 	"devDependencies": {
 		"@babel/cli": "7.4.4",
@@ -17,7 +17,9 @@
 	"author": "",
 	"license": "ISC",
 	"dependencies": {
+		"clipboardy": "^2.0.0",
 		"fs-extra": "^8.0.1",
+		"lodash": "^4.17.11",
 		"nearley": "^2.16.0"
 	}
 }

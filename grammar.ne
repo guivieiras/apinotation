@@ -13,6 +13,8 @@
 
 
 # Main -> Line "\n" Main {% (data) => [...data[0], ...data[2]] %} | Line {% id %}
+Groups -> Group "\n" Groups {% (data) => [data[0], ...data[2]] %}  | Group 
+Group -> "@Group " word "\n" Routes {% data => ({ groupName: data[1], routes: data[3]   })  %}
 Routes -> Route "\n" Routes {% (data) => [data[0], ...data[2]] %}  | Route 
 Others -> Params {% id %} | Body {% id %} | QueryInfos {% id %} | Response {% id %} 
 Route -> "@Route" _ Method  _ Url (" " Description {% (d) => d[1] %}):?  
@@ -37,7 +39,7 @@ Route -> "@Route" _ Method  _ Url (" " Description {% (d) => d[1] %}):?
 	return toReturn
 } %}
 
-Method -> "post"i {% idLower %} | "get"i {% idLower %}
+Method -> "post"i {% idLower %} | "get"i {% idLower %} | "put"i {% idLower %} | "delete"i {% idLower %}
 
 
 Url ->  "/" word (Url):? {% data => {
@@ -59,13 +61,13 @@ Url ->  "/" word (Url):? {% data => {
 
    if(data[2] && data[2][0].params){
       return {
-         url: [ data[1],  ...data[2][0].url ], 
+         url: [ ":" + data[1],  ...data[2][0].url ], 
          params: [data[1],  ...data[2][0].params ],
          query: data[2] ? data[2][0].query : null
       }
    }
    return {
-      url: [data[1]], 
+      url: [ ":" + data[1]], 
       params:  [data[1]],
       query: data[2] ? data[2][0].query : null
    }
@@ -74,10 +76,7 @@ Url ->  "/" word (Url):? {% data => {
 
    | "?" QueryRep {% data => ({query: data[1]}) %}
 
-QueryRep -> word "," QueryRep {% (data) => [data[0], ...data[2]] %}  | word
-
-word -> [a-zA-Z]:+ {% idJoin %}
-Description -> [a-zA-Z] [a-zA-Z0-9\- ]:+ {% (data) => data[0] + data[1].join("") %}
+QueryRep -> identifier "," QueryRep {% (data) => [data[0], ...data[2]] %}  | identifier
 
 
 Params -> "@Params" _ ParamRep {% (data) => 
@@ -101,7 +100,7 @@ QueryInfoRep -> QueryInfo ", " QueryInfoRep {% (data) =>
 %}  
    | QueryInfo 
 
-QueryInfo -> word (": " Description {% (d) => d[1] %}):?  {% (data) => 
+QueryInfo -> identifier (": " Description {% (d) => d[1] %}):?  {% (data) => 
    ({
       [data[0]]: data[1]
    })  
@@ -120,15 +119,14 @@ json -> "{ " ("...$" word ", " {% data =>  data[1]  %}):* tagRep " }" {% data=> 
    return toReturn
 } %}
  | "$" word {% data => '$' + data[1] %}
+ | "[" json "]" {% data => [data[1]] %}
+ | "[ " json " ]" {% data => [data[1]] %}
 
 tagRep -> tag ", " tagRep {% data=> ({...data[0], ...data[2]})  %} | tag {% id %}
 
-tag -> word {% data => ({[data[0]]: "String"}) %} 
-      | word ": " json {% data => ({[data[0]]: data[2]}) %}
-      | word ": '" Description "'" {% data => ({[data[0]]: data[2]}) %}
-      | word ": \"" Description "\"" {% data => ({[data[0]]: data[2]}) %}
-      | word ": [" json "]" {% data => ({[data[0]]: [data[2]]}) %}
-      | word ": [ " json " ]" {% data => ({[data[0]]: [data[2]]}) %}
+tag -> identifier {% data => ({[data[0]]: "String"}) %} 
+      | identifier ": " json {% data => ({[data[0]]: data[2]}) %}
+      | identifier ": " String  {% data => ({[data[0]]: data[2]}) %}
       
 
 
@@ -148,11 +146,18 @@ Response -> "@Response" _ threeNumb (_ ResponseRest):? ("\n" Headers):? {% data=
 } %}
 ResponseRest -> "json" _ json {% data=> ({contentType: data[0], json: data[2]})  %} 
 
-threeNumb -> [0-9] [0-9] [0-9] {% data => data[0] + data[1] + data[2]  %}
-
 Headers -> Header "\n" Headers {% data => ({...data[0], ...data[2]}) %} | Header {% id %}
 Header -> "@Header" _ headerKey _ Description {% data => ({ [data[2]]: data[4] }) %}
 
-_ -> " "
 
+_ -> " "
+word -> [a-zA-Z]:+ {% idJoin %}
+Description -> [a-zA-Z\-] [a-zA-Z0-9\- áàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑẽ;\-\+]:+ {% (data) => data[0] + data[1].join("") %}
+String -> "\"" StringInside "\"" {% (data) => data[1] %}
+         | "'" StringInside "'" {% (data) => data[1] %}
+
+StringInside -> [ ,a-zA-Z0-9\-áàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑãẽ]:* {% (data) => data[0].join("") %}
+
+threeNumb -> [0-9] [0-9] [0-9] {% data => data[0] + data[1] + data[2]  %}
+identifier -> [a-zA-Z_] [a-zA-Z0-9_]:* {% data => data[0] + data[1].join("") %}
 headerKey -> [a-zA-Z] [a-zA-Z0-9\-]:+ {% (data) => data[0] + data[1].join("") %}

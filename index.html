@@ -4,109 +4,133 @@
 		<link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons" rel="stylesheet" />
 		<link href="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.min.css" rel="stylesheet" />
 		<link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.css" rel="stylesheet" />
-		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui" />
+		<!-- <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui" /> -->
 	</head>
 
 	<body>
 		<div id="app">
 			<v-app>
-				<v-content>
-					<v-layout>
-						<v-navigation-drawer v-model="drawer" :mini-variant.sync="mini" hide-overlay stateless>
-							<v-toolbar flat class="transparent">
-								<v-list class="pa-0">
-									<v-list-tile avatar>
-										<v-list-tile-avatar>
-											<img src="https://randomuser.me/api/portraits/men/85.jpg" />
-										</v-list-tile-avatar>
+				<v-navigation-drawer v-model="drawer" :mini-variant.sync="mini" app>
+					<v-toolbar flat class="transparent">
+						<v-list class="pa-0">
+							<v-list-tile avatar>
+								<v-list-tile-avatar>
+									<img src="https://avatars2.githubusercontent.com/u/8260015?s=460&v=4" />
+								</v-list-tile-avatar>
 
-										<v-list-tile-content>
-											<v-list-tile-title>John Leider</v-list-tile-title>
-										</v-list-tile-content>
+								<v-list-tile-content>
+									<v-list-tile-title>Guilherme Vieira</v-list-tile-title>
+								</v-list-tile-content>
 
-										<v-list-tile-action>
-											<v-btn icon @click.stop="mini = !mini">
-												<v-icon>chevron_left</v-icon>
-											</v-btn>
-										</v-list-tile-action>
-									</v-list-tile>
-								</v-list>
-							</v-toolbar>
+								<v-list-tile-action>
+									<v-btn icon @click.stop="mini = !mini">
+										<v-icon>chevron_left</v-icon>
+									</v-btn>
+								</v-list-tile-action>
+							</v-list-tile>
+						</v-list>
+					</v-toolbar>
 
-							<v-list class="pt-0" dense>
-								<v-divider></v-divider>
+					<v-list class="pt-0" dense>
+						<v-divider></v-divider>
 
-								<v-list-tile v-for="item in items" :key="item.title" @click="">
-									<v-list-tile-action>
-										<v-icon>{{ item.icon }}</v-icon>
-									</v-list-tile-action>
+						<v-list-tile v-for="item in items" :key="item.title" @click="">
+							<v-list-tile-action>
+								<v-icon>{{ item.icon }}</v-icon>
+							</v-list-tile-action>
 
-									<v-list-tile-content>
-										<v-list-tile-title>{{ item.title }}</v-list-tile-title>
-									</v-list-tile-content>
+							<v-list-tile-content>
+								<v-list-tile-title>{{ item.title }}</v-list-tile-title>
+							</v-list-tile-content>
+						</v-list-tile>
+
+						<v-list-group prepend-icon="account_circle">
+							<template v-slot:activator>
+								<v-list-tile>
+									<v-list-tile-title>Users</v-list-tile-title>
 								</v-list-tile>
+							</template>
 
-								<v-list-group prepend-icon="account_circle">
-									<template v-slot:activator>
-										<v-list-tile>
-											<v-list-tile-title>Users</v-list-tile-title>
-										</v-list-tile>
-									</template>
+							<v-list-tile :href="'#'+ route.url" v-for="route of resolved">
+								<v-list-tile-action>
+									<v-icon>web</v-icon>
+								</v-list-tile-action>
+								<v-list-tile-title>{{ route.description || route.url }}</v-list-tile-title>
+							</v-list-tile>
+						</v-list-group>
+					</v-list>
+				</v-navigation-drawer>
+				<v-content>
+					<v-container>
+						<v-layout fill-height column>
+							<h1>API Name</h1>
 
-									<v-list-tile :href="'#'+ route.url" v-for="route of resolved">
-										<v-list-tile-title>{{ route.description }}</v-list-tile-title>
-										<v-list-tile-action>
-											<v-icon>web</v-icon>
-										</v-list-tile-action>
-									</v-list-tile>
-								</v-list-group>
-							</v-list>
-						</v-navigation-drawer>
-						<v-layout>
-							<v-flex xs8 pa-3 class="border">
-								<h1>API Name</h1>
-
-								<div v-for="route in resolved">
-									<h2>{{ route.url }} - {{ route.description }}</h2>
-
-									<div v-if="route.paramsInfo">
-										<h3>Params</h3>
-										<h4 v-for="param of route.params">{{ param }}: {{ route.paramsInfo[param] }}</h4>
-									</div>
-
-									<div v-if="route.queryInfos">
-										<h3>Query infos</h3>
-										<h4 v-for="param of route.query">{{ param }}: {{ route.queryInfos[param] }}</h4>
-									</div>
-
-									<div v-if="route.body">
-										<h3>Body</h3>
-										<h4>Content-type: {{ route.body.contentType }}</h4>
-										<code v-if="route.body.contentType == 'json'">{{ JSON.stringify(route.body.json, null, 2) }}</code>
-									</div>
-
-									<div v-if="route.responses.length > 0">
-										<h3>Responses</h3>
-										<div v-for="response of route.responses">
-											<h4>Code: {{ response.code }}</h4>
-
-											<div v-if="response.headers">
-												<h4>Headers</h4>
-
-												<h4 v-for="header of Object.keys(response.headers)">{{ header }} - {{ response.headers[header] }}</h4>
-												<hr />
-											</div>
+							<v-expansion-panel expand>
+								<v-expansion-panel-content v-for="group in resolved">
+									<template v-slot:header>
+										<div>
+											{{ group.groupName }}
 										</div>
-									</div>
+									</template>
+									<v-expansion-panel expand>
+										<v-expansion-panel-content v-for="route in group.routes">
+											<template v-slot:header>
+												<div>{{ route.method }} {{ route.url }} {{ route.description ? ' - ' + route.description : '' }}</div>
+											</template>
+											<v-card>
+												<v-card-text>
+													<div v-if="route.paramsInfo">
+														<h3>Params</h3>
+														<h4 v-for="param of route.params">{{ param }}: {{ route.paramsInfo[param] }}</h4>
+													</div>
 
-									<hr />
+													<div v-if="route.queryInfos">
+														<h3>Query infos</h3>
+														<h4 v-for="param of route.query">{{ param }}: {{ route.queryInfos[param] }}</h4>
+													</div>
+
+													<div v-if="route.body">
+														<h3>Body</h3>
+														<h4>Content-type: {{ route.body.contentType }}</h4>
+														<code v-if="route.body.contentType == 'json'">{{
+															JSON.stringify(route.body.json, null, 2)
+														}}</code>
+													</div>
+
+													<div v-if="route.responses.length > 0">
+														<h3>Responses</h3>
+														<div v-for="response of route.responses">
+															<h4>Code: {{ response.code }} Content-Type: {{ response.contentType }}</h4>
+															<div v-if="response.contentType == 'json'">
+																<code>{{ response.json }}</code>
+															</div>
+
+															<div v-if="response.headers">
+																<h4>Headers</h4>
+
+																<h4 v-for="header of Object.keys(response.headers)">
+																	{{ header }} - {{ response.headers[header] }}
+																</h4>
+																<hr />
+															</div>
+														</div></div
+												></v-card-text>
+											</v-card>
+										</v-expansion-panel-content>
+									</v-expansion-panel>
+								</v-expansion-panel-content>
+							</v-expansion-panel>
+
+							<gdrawer title="Banana">
+								<div v-if="clickedRoute">
+									{{ clickedRoute.url }}
 								</div>
-							</v-flex>
-							<v-flex xs4 pa-3 class="border">
-								<h1>API Method</h1>
-							</v-flex>
+								<div v-else>
+									Por favor, selecione uma rota
+								</div>
+							</gdrawer>
 						</v-layout>
-					</v-layout>
+					</v-container>
 				</v-content>
 			</v-app>
 		</div>
@@ -121,11 +145,17 @@
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.js"></script>
 		<script src="https://js.stripe.com/v3/"></script>
 		<script src="resolved.js"></script>
+		<script src="components/drawer.js"></script>
 		<script>
 			let Axios = axios.create({ baseURL: 'http://localhost/api', withCredentials: true })
+
 			new Vue({
 				el: '#app',
+				components: {
+					gdrawer
+				},
 				data: () => ({
+					clickedRoute: null,
 					drawer: true,
 					items: [{ title: 'Home', icon: 'dashboard' }, { title: 'About', icon: 'question_answer' }],
 					mini: true,
@@ -155,6 +185,14 @@
 		<style>
 			.border {
 				border: 1px solid red;
+			}
+			code {
+				width: 100%;
+				margin: 5px;
+				padding: 10px;
+			}
+			code::before {
+				content: '';
 			}
 		</style>
 	</body>

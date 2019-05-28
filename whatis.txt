@@ -2,7 +2,7 @@
 @Route POST /auth/signin/:rota/outra?querya,queryb Gostei disso tambem
 @Params rota: bela tentativa
 @Query querya: teste, queryb: outro teste
-@Body json { email, password, casaDahora: { teste, testedawda: "zika ne" } }
+@Body json { email, password, casaDahora: { teste2, testedawda: "zika ne" } }
 @Response 200 json { email, name, avatar, id, casaDahora: { teste, testex } }
 @Header Set-cookie batataaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa frita
 @Header Content-type batataaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa frita

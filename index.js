@@ -1,6 +1,11 @@
 import fs from 'fs'
+import lodash from 'lodash'
+import nearley from 'nearley'
+import grammar from './grammar.js'
+import clipboardy from 'clipboardy'
+const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar))
 
-let dirPath = '/home/jessica/git/num-backend/src/routes/'
+let dirPath = '/home/guilherme/Documents/git/num-backend/src/routes/'
 let files = fs.readdirSync(dirPath)
 
 let paths = []
@@ -8,13 +13,58 @@ for (let file of files) {
 	paths = [...paths, ...readFile(dirPath + file)]
 }
 
-console.log(paths)
-
-const nearley = require('nearley')
-const grammar = require('./grammar.js')
-const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar))
 parser.feed(paths.join('\n'))
-console.dir(parser.results, { depth: null })
+
+if (parser.results.length > 1) {
+	throw 'Ambiguidade'
+}
+
+let subst = {
+	$User: { nome: 'String', teste: 'String' },
+	$Media: { nome: 'String', teste: 'String' },
+	$Exchange: { nome: 'String', teste: 'String' },
+	$Url: { nome: 'String', teste: 'String' },
+	$QueryInfo: { nome: 'String', teste: 'String' }
+}
+
+replaceRefs(parser.results[0])
+
+function replaceRefs(result) {
+	let values = getValues(result).filter(v => !!v.obj && (v.obj.startsWith('$') || v.path.some(x => x == '$spread')))
+	for (let v of values) {
+		if (v.obj.startsWith('$')) {
+			lodash.set(result, v.path, subst[v.obj])
+		} else {
+			v.path.pop()
+			v.path.pop()
+			let toSpread = lodash.get(result, v.path)
+			delete toSpread.$spread
+			lodash.set(result, v.path, { ...toSpread, ...subst['$' + v.obj] })
+		}
+	}
+}
+console.dir(parser.results[0], { depth: null })
+
+clipboardy.writeSync(JSON.stringify(parser.results[0], null, 2))
+
+function getValues(obj, path = []) {
+	if (Array.isArray(obj)) {
+		let values = []
+		for (let [i, objS] of obj.entries()) {
+			values = [...values, ...getValues(objS, [...path, i])]
+		}
+		return values
+	} else if (typeof obj == 'object') {
+		let values = []
+		for (let key in obj) {
+			values = [...values, ...getValues(obj[key], [...path, key])]
+		}
+		return values
+	} else {
+		return [{ obj, path }]
+		//console.log(JSON.stringify({ obj, path }, null, 2))
+	}
+}
 
 function readFile(fileName) {
 	let result = fs.readFileSync(fileName, { encoding: 'utf-8' })
@@ -27,8 +77,9 @@ function readFile(fileName) {
 
 	for (let i = 0; i < inicios.length; i++) {
 		let raw = result.substring(inicios[i], fins[i])
-		let [useless, ...lines] = raw.split('\n')
-		let filteredLines = lines.map(l => l.substring(l.indexOf('@')).trim()).filter(l => !!l)
+		// let [useless, ...lines] = raw.split('\n')
+		let lines = raw.split(/\n/)
+		let filteredLines = lines.map(l => l.substring(l.indexOf('@')).trim()).filter(l => !!l && l.indexOf('@') > -1)
 
 		paths = [...paths, ...filteredLines]
 	}
