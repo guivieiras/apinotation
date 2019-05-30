@@ -5,47 +5,56 @@ import grammar from './grammar.js'
 import clipboardy from 'clipboardy'
 const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar))
 
-let dirPath = '/home/guilherme/Documents/git/num-backend/src/routes/'
-let files = fs.readdirSync(dirPath)
+export function init(routesFolder, subst) {
+	let dirPath = routesFolder.endsWith('/') ? routesFolder : routesFolder + '/'
+	let files = fs.readdirSync(dirPath)
 
-let paths = []
-for (let file of files) {
-	paths = [...paths, ...readFile(dirPath + file)]
+	let paths = []
+	for (let file of files) {
+		paths = [...paths, ...readFile(dirPath + file)]
+	}
+
+	parser.feed(paths.join('\n'))
+
+	if (parser.results.length > 1) {
+		throw 'Ambiguidade'
+	}
+
+	let subst = {
+		$User: { nome: 'String', teste: 'String' },
+		$Media: { nome: 'String', teste: 'String' },
+		$Exchange: { nome: 'String', teste: 'String' },
+		$Url: { nome: 'String', teste: 'String' },
+		$QueryInfo: { nome: 'String', teste: 'String' }
+	}
+
+	replaceRefs(parser.results[0], subst)
+
+	console.dir(parser.results[0], { depth: null })
+
+	clipboardy.writeSync(JSON.stringify(parser.results[0], null, 2))
+
+	return 'node_modules/apinotation'
 }
 
-parser.feed(paths.join('\n'))
-
-if (parser.results.length > 1) {
-	throw 'Ambiguidade'
-}
-
-let subst = {
-	$User: { nome: 'String', teste: 'String' },
-	$Media: { nome: 'String', teste: 'String' },
-	$Exchange: { nome: 'String', teste: 'String' },
-	$Url: { nome: 'String', teste: 'String' },
-	$QueryInfo: { nome: 'String', teste: 'String' }
-}
-
-replaceRefs(parser.results[0])
-
-function replaceRefs(result) {
+function replaceRefs(result, subst) {
 	let values = getValues(result).filter(v => !!v.obj && (v.obj.startsWith('$') || v.path.some(x => x == '$spread')))
 	for (let v of values) {
-		if (v.obj.startsWith('$')) {
-			lodash.set(result, v.path, subst[v.obj])
-		} else {
-			v.path.pop()
-			v.path.pop()
-			let toSpread = lodash.get(result, v.path)
-			delete toSpread.$spread
-			lodash.set(result, v.path, { ...toSpread, ...subst['$' + v.obj] })
+		try {
+			if (v.obj.startsWith('$')) {
+				lodash.set(result, v.path, subst[v.obj])
+			} else {
+				v.path.pop()
+				v.path.pop()
+				let toSpread = lodash.get(result, v.path)
+				delete toSpread.$spread
+				lodash.set(result, v.path, { ...toSpread, ...subst['$' + v.obj] })
+			}
+		} catch (error) {
+			console.error(error)
 		}
 	}
 }
-console.dir(parser.results[0], { depth: null })
-
-clipboardy.writeSync(JSON.stringify(parser.results[0], null, 2))
 
 function getValues(obj, path = []) {
 	if (Array.isArray(obj)) {
