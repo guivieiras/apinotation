@@ -1,8 +1,7 @@
-import fs from 'fs'
+import fs from 'fs-extra'
 import lodash from 'lodash'
 import nearley from 'nearley'
 import grammar from './grammar.js'
-import clipboardy from 'clipboardy'
 const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar))
 
 export default function(routesFolder, subst) {
@@ -26,7 +25,12 @@ export default function(routesFolder, subst) {
 
 	// clipboardy.writeSync(JSON.stringify(parser.results[0], null, 2))
 
-	return 'node_modules/apinotation/dist/html'
+	fs.copySync('node_modules/apinotation/dist/html', '/tmp/apinotation-docs')
+	fs.writeFileSync('/tmp/apinotation-docs/resolved.js', `let resolved = ${JSON.stringify(parser.results[0], null, 2)}`, {
+		encoding: 'utf-8'
+	})
+
+	return '/tmp/apinotation-docs'
 }
 
 function replaceRefs(result, subst) {

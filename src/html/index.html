@@ -154,6 +154,51 @@
 		<script src="resolved.js"></script>
 		<script src="components/drawer.js"></script>
 		<script>
+			function darkenLighten(col, amt) {
+				var usePound = false
+
+				if (col[0] == '#') {
+					col = col.slice(1)
+					usePound = true
+				}
+
+				var num = parseInt(col, 16)
+
+				var r, g, b, a
+				if (num <= 0xffffff) {
+					r = (num >> 16) + amt
+					g = ((num >>> 8) & 0xff) + amt
+					b = (num & 0xff) + amt
+				} else {
+					r = (num >>> 24) + amt
+					g = ((num >>> 16) & 0xff) + amt
+					b = ((num >>> 8) & 0xff) + amt
+					a = num & 0xff
+				}
+				r = maxMin255(r)
+				g = maxMin255(g)
+				b = maxMin255(b)
+				a = maxMin255(a)
+
+				// console.log(r, g, b, a, num, col, (0xffffff > num).toString(16))
+
+				let v =
+					r.toString(16).padStart(2, 0) +
+					'' +
+					g.toString(16).padStart(2, 0) +
+					'' +
+					b.toString(16).padStart(2, 0) +
+					'' +
+					(a ? a.toString(16).padStart(2, 0) : '')
+
+				return (usePound ? '#' : '') + v
+			}
+			function maxMin255(x) {
+				if (x > 255) return 255
+				if (x < 0) return 0
+				return x
+			}
+
 			let Axios = axios.create({ baseURL: 'http://localhost/api', withCredentials: true })
 
 			new Vue({
@@ -182,7 +227,12 @@
 					let nodes = document.querySelectorAll('.route-header-background')
 					for (let node of nodes) {
 						node.parentElement.style.backgroundColor = this.getColor(node.classList[1])
-						node.parentElement.parentElement.style.borderColor = this.getColor(node.classList[1])
+						node.parentElement.parentElement.style.borderColor = darkenLighten(this.getColor(node.classList[1]), 30)
+					}
+					nodes = document.querySelectorAll('.group-header-background')
+					for (let node of nodes) {
+						node.parentElement.style.backgroundColor = '#add8e6'
+						node.parentElement.parentElement.style.borderColor = darkenLighten('#add8e6', 30)
 					}
 				},
 				methods: {
