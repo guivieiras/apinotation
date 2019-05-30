@@ -52,7 +52,7 @@
 								</v-list-tile>
 							</template>
 
-							<v-list-tile :href="'#'+ route.url" v-for="route of resolved.reduce( (a,b) => [...a,...b.routes], [])">
+							<v-list-tile :href="'#'+route.method +route.url" v-for="route of resolved.reduce( (a,b) => [...a,...b.routes], [])">
 								<v-list-tile-title>{{ route.description || route.url }}</v-list-tile-title>
 							</v-list-tile>
 						</v-list-group>
@@ -67,18 +67,22 @@
 							<v-expansion-panel expand v-model="panels.groups">
 								<v-expansion-panel-content v-for="group in resolved" :key="group.groupName">
 									<template v-slot:header>
-										<h2>
-											{{ group.groupName }}
-										</h2>
+										<div class="group-header-background">
+											<h2>
+												{{ group.groupName }}
+											</h2>
+										</div>
 									</template>
 									<v-expansion-panel expand v-model="panels.group[group.groupName]">
-										<v-expansion-panel-content v-for="route of group.routes" :key="route.url">
-											<template v-slot:header>
-												<h3 :style="{color: getColor(route.method)}" :id="route.url">
-													{{ route.method }} {{ route.url }} {{ route.description ? ' - ' + route.description : '' }}
-												</h3>
+										<v-expansion-panel-content v-for="route of group.routes" :key="route.method + route.url">
+											<template v-slot:header :style="{'background-color': getColor(route.method)}">
+												<div class="route-header-background" :class="route.method">
+													<h3 :id="route.method+route.url">
+														{{ route.method }} {{ route.url }} {{ route.description ? ' - ' + route.description : '' }}
+													</h3>
+												</div>
 											</template>
-											<v-card :style="{'background-color': getColor(route.method)}">
+											<v-card :style="{'background-color': getColor(route.method, true)}">
 												<v-card-text>
 													<div v-if="route.paramsInfo || route.queryInfos" class="pa-3 elevation-3 mb-3">
 														<div v-if="route.paramsInfo">
@@ -174,6 +178,12 @@
 					for (let [i, group] of resolved.entries()) {
 						this.panels.group[group.groupName] = new Array(group.routes.length).fill(false)
 					}
+
+					let nodes = document.querySelectorAll('.route-header-background')
+					for (let node of nodes) {
+						node.parentElement.style.backgroundColor = this.getColor(node.classList[1])
+						node.parentElement.parentElement.style.borderColor = this.getColor(node.classList[1])
+					}
 				},
 				methods: {
 					openCloseAll(changeTo) {
@@ -185,16 +195,17 @@
 					botao(mensagem) {
 						alert(mensagem)
 					},
-					getColor(method) {
+					getColor(method, light = false) {
+						let opacity = light ? 'aa' : 'cc'
 						switch (method) {
 							case 'POST':
-								return '#1976d2'
+								return '#1976d2' + opacity
 							case 'GET':
-								return '#4caf50'
+								return '#4caf50' + opacity
 							case 'DELETE':
-								return '#f44336'
+								return '#f44336' + opacity
 							case 'PUT':
-								return '#fb8c00'
+								return '#fb8c00' + opacity
 						}
 					},
 					handleErrors(error) {
@@ -227,6 +238,9 @@
 			.application {
 				font-family: monospace;
 			}
+			/* * {
+				transition: none !important;
+			} */
 		</style>
 	</body>
 </html>
