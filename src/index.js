@@ -5,7 +5,7 @@ import grammar from './grammar.js'
 import clipboardy from 'clipboardy'
 const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar))
 
-export function init(routesFolder, subst) {
+export default function(routesFolder, subst) {
 	let dirPath = routesFolder.endsWith('/') ? routesFolder : routesFolder + '/'
 	let files = fs.readdirSync(dirPath)
 
@@ -20,21 +20,13 @@ export function init(routesFolder, subst) {
 		throw 'Ambiguidade'
 	}
 
-	let subst = {
-		$User: { nome: 'String', teste: 'String' },
-		$Media: { nome: 'String', teste: 'String' },
-		$Exchange: { nome: 'String', teste: 'String' },
-		$Url: { nome: 'String', teste: 'String' },
-		$QueryInfo: { nome: 'String', teste: 'String' }
-	}
-
 	replaceRefs(parser.results[0], subst)
 
-	console.dir(parser.results[0], { depth: null })
+	// console.dir(parser.results[0], { depth: null })
 
-	clipboardy.writeSync(JSON.stringify(parser.results[0], null, 2))
+	// clipboardy.writeSync(JSON.stringify(parser.results[0], null, 2))
 
-	return 'node_modules/apinotation'
+	return 'node_modules/apinotation/dist/html'
 }
 
 function replaceRefs(result, subst) {
@@ -51,7 +43,7 @@ function replaceRefs(result, subst) {
 				lodash.set(result, v.path, { ...toSpread, ...subst['$' + v.obj] })
 			}
 		} catch (error) {
-			console.error(error)
+			console.error(error.message ? error.message : error)
 		}
 	}
 }

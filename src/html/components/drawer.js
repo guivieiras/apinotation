@@ -37,15 +37,16 @@ let gdrawer = {
 		},
 		setEvents() {
 			const minSize = this.navigation.minSize
+			const maxSize = this.navigation.maxSize
 			const el = this.$refs.drawer.$el
 			const drawerBorder = el.querySelector('.v-navigation-drawer__border')
 			const vm = this
 			const direction = el.classList.contains('v-navigation-drawer--right') ? 'right' : 'left'
 
-			resize = e => {
+			function resize(e) {
 				document.body.style.cursor = 'ew-resize'
 				let f = direction === 'right' ? document.body.scrollWidth - e.clientX : e.clientX
-				if (f > this.navigation.minSize && f < this.navigation.maxSize) {
+				if (f > minSize && f < maxSize) {
 					el.style.width = f + 'px'
 					vm.navigation.width = el.style.width
 				}
@@ -55,9 +56,7 @@ let gdrawer = {
 				'mousedown',
 				function(e) {
 					if (e.offsetX < minSize) {
-						m_pos = e.x
 						el.style.transition = 'initial'
-
 						document.addEventListener('mousemove', resize, false)
 					}
 				},

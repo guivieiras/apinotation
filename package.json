@@ -1,11 +1,13 @@
 {
 	"name": "apinotation",
-	"version": "1.0.1",
+	"version": "1.0.12",
 	"description": "",
-	"main": "index.js",
+	"main": "./dist/index.js",
 	"scripts": {
 		"start": "babel-node index.js",
-		"mine": "nodemon --exec \"nearleyc grammar.ne -o grammar.js && babel-node index.js\" --watch grammar.ne --watch whatis.txt"
+		"build": "babel ./src -d dist --copy-files",
+		"mine": "nodemon --exec \"nearleyc grammar.ne -o grammar.js && babel-node index.js\" --watch grammar.ne --watch whatis.txt",
+		"prepublish": "npm run build"
 	},
 	"devDependencies": {
 		"@babel/cli": "^7.4.4",
