@@ -62,22 +62,23 @@
 					<v-container>
 						<v-layout fill-height column>
 							<h1>API Name</h1>
-
-							<v-expansion-panel expand>
-								<v-expansion-panel-content v-for="group in resolved">
+							<v-btn @click="openCloseAll(true)">Open</v-btn>
+							<v-btn @click="openCloseAll(false)">Close</v-btn>
+							<v-expansion-panel expand v-model="panels.groups">
+								<v-expansion-panel-content v-for="group in resolved" :key="group.groupName">
 									<template v-slot:header>
 										<h2>
 											{{ group.groupName }}
 										</h2>
 									</template>
-									<v-expansion-panel expand>
-										<v-expansion-panel-content v-for="route in group.routes">
+									<v-expansion-panel expand v-model="panels.group[group.groupName]">
+										<v-expansion-panel-content v-for="route of group.routes" :key="route.url">
 											<template v-slot:header>
 												<h3 :style="{color: getColor(route.method)}" :id="route.url">
 													{{ route.method }} {{ route.url }} {{ route.description ? ' - ' + route.description : '' }}
 												</h3>
 											</template>
-											<v-card>
+											<v-card :style="{'background-color': getColor(route.method)}">
 												<v-card-text>
 													<div v-if="route.paramsInfo || route.queryInfos" class="pa-3 elevation-3 mb-3">
 														<div v-if="route.paramsInfo">
@@ -157,6 +158,10 @@
 					gdrawer
 				},
 				data: () => ({
+					panels: {
+						group: {},
+						groups: []
+					},
 					clickedRoute: null,
 					drawer: true,
 					items: [{ title: 'Home', icon: 'dashboard' }, { title: 'About', icon: 'question_answer' }],
@@ -164,8 +169,19 @@
 					right: null,
 					resolved
 				}),
-				async mounted() {},
+				mounted() {
+					this.panels.groups = new Array(resolved.length).fill(false)
+					for (let [i, group] of resolved.entries()) {
+						this.panels.group[group.groupName] = new Array(group.routes.length).fill(false)
+					}
+				},
 				methods: {
+					openCloseAll(changeTo) {
+						this.panels.groups = new Array(this.panels.groups.length).fill(changeTo)
+						for (let groupName of Object.keys(this.panels.group)) {
+							this.panels.group[groupName] = new Array(this.panels.group[groupName].length).fill(changeTo)
+						}
+					},
 					botao(mensagem) {
 						alert(mensagem)
 					},
