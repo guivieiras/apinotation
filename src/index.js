@@ -4,7 +4,7 @@ import nearley from 'nearley'
 import grammar from './grammar.js'
 const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar))
 
-export default function(routesFolder, subst) {
+export default function(routesFolder, subst, publishFolder = '/tmp/apinotation-docs') {
 	let dirPath = routesFolder.endsWith('/') ? routesFolder : routesFolder + '/'
 	let files = fs.readdirSync(dirPath)
 
@@ -25,12 +25,12 @@ export default function(routesFolder, subst) {
 
 	// clipboardy.writeSync(JSON.stringify(parser.results[0], null, 2))
 
-	fs.copySync('node_modules/apinotation/dist/html', '/tmp/apinotation-docs')
-	fs.writeFileSync('/tmp/apinotation-docs/resolved.js', `let resolved = ${JSON.stringify(parser.results[0], null, 2)}`, {
+	fs.copySync('node_modules/apinotation/dist/html', publishFolder)
+	fs.writeFileSync(publishFolder + '/resolved.js', `let resolved = ${JSON.stringify(parser.results[0], null, 2)}`, {
 		encoding: 'utf-8'
 	})
 
-	return '/tmp/apinotation-docs'
+	return publishFolder
 }
 
 function replaceRefs(result, subst) {
