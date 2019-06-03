@@ -1,5 +1,7 @@
 # apinotation
 
+[![npm version](https://badge.fury.io/js/apinotation.svg)](https://badge.fury.io/js/apinotation)
+
 A simple package that generates a documentation based on comments in javascript source code
 
 ## Comments
