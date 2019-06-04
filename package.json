@@ -1,6 +1,6 @@
 {
 	"name": "apinotation",
-	"version": "1.0.24",
+	"version": "1.0.25",
 	"description": "A simple annotation processer to generate API documentation based on js comments",
 	"main": "./dist/index.js",
 	"repository": {
@@ -9,7 +9,7 @@
 	},
 	"scripts": {
 		"start": "babel-node index.js",
-		"build": "babel ./src -d dist --copy-files",
+		"build": "babel ./src -d dist --copy-files && nearleyc src/grammar.ne -o dist/grammar.js",
 		"mine": "nodemon --exec \"nearleyc grammar.ne -o grammar.js && babel-node index.js\" --watch grammar.ne --watch whatis.txt",
 		"prepublish": "npm run build"
 	},
