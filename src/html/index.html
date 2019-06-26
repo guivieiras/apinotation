@@ -16,7 +16,7 @@
 						<v-list class="pa-0">
 							<v-list-tile avatar>
 								<v-list-tile-avatar>
-									<img src="https://avatars2.githubusercontent.com/u/8260015?s=460&v=4" />
+									<img src="https://avatars2.githubusercontent.com/u/8260015?s=46&v=4" />
 								</v-list-tile-avatar>
 
 								<v-list-tile-content>
@@ -98,9 +98,7 @@
 													<div class="mb-2 pa-3 elevation-3" v-if="route.body">
 														<h3>Body</h3>
 														<h4>Content-type: {{ route.body.contentType }}</h4>
-														<code v-if="route.body.contentType == 'json'">{{
-															JSON.stringify(route.body.json, null, 2)
-														}}</code>
+														<code v-if="route.body.contentType == 'json'">{{ JSON.stringify(route.body.json, null, 2) }}</code>
 													</div>
 
 													<div class="mb-2 pa-3 elevation-3" v-if="route.responses.length > 0">
@@ -114,9 +112,7 @@
 															<div v-if="response.headers">
 																<h4>Headers</h4>
 
-																<h4 v-for="header of Object.keys(response.headers)">
-																	{{ header }} - {{ response.headers[header] }}
-																</h4>
+																<h4 v-for="header of Object.keys(response.headers)">{{ header }} - {{ response.headers[header] }}</h4>
 															</div>
 															<v-divider class="my-2"></v-divider>
 														</div>
