@@ -2,18 +2,33 @@ import fs from 'fs-extra'
 import lodash from 'lodash'
 import nearley from 'nearley'
 import grammar from './grammar.js'
+import path from 'path'
 const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar))
 
-export default function(routesFolder, subst, publishFolder = '/tmp/apinotation-docs') {
-	let dirPath = routesFolder.endsWith('/') ? routesFolder : routesFolder + '/'
-	let files = fs.readdirSync(dirPath)
+function recursive(dir) {
+	let files = []
+	function walkDir(dir) {
+		for (let f of fs.readdirSync(dir)) {
+			let dirPath = path.join(dir, f)
+			let isDirectory = fs.statSync(dirPath).isDirectory()
+			isDirectory ? walkDir(dirPath) : files.push(path.join(dir, f))
+		}
+	}
+	walkDir(dir)
+	return files
+}
 
-	let paths = []
-	for (let file of files) {
-		paths = [...paths, ...readFile(dirPath + file)]
+export default function(routesFolder, subst, publishFolder = '/tmp/apinotation-docs') {
+	let annotations = []
+
+	for (let file of recursive(routesFolder)) {
+		let x = readFile(file)
+		if (x.length > 0) {
+			annotations = [...annotations, ...x]
+		}
 	}
 
-	parser.feed(paths.join('\n'))
+	parser.feed(annotations.join('\n'))
 
 	if (parser.results.length > 1) {
 		throw 'Ambiguidade'
@@ -22,7 +37,6 @@ export default function(routesFolder, subst, publishFolder = '/tmp/apinotation-d
 	replaceRefs(parser.results[0], subst)
 
 	// console.dir(parser.results[0], { depth: null })
-
 	// clipboardy.writeSync(JSON.stringify(parser.results[0], null, 2))
 
 	fs.copySync('node_modules/apinotation/dist/html', publishFolder)

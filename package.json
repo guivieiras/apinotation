@@ -1,6 +1,6 @@
 {
 	"name": "apinotation",
-	"version": "1.0.26",
+	"version": "1.0.27",
 	"description": "A simple annotation processer to generate API documentation based on js comments",
 	"main": "./dist/index.js",
 	"repository": {
@@ -8,9 +8,9 @@
 		"url": "https://github.com/theguii/apinotation.git"
 	},
 	"scripts": {
-		"start": "babel-node index.js",
+		"start": "babel-node src/index.js",
 		"build": "babel ./src -d dist --copy-files && nearleyc src/grammar.ne -o dist/grammar.js",
-		"mine": "nodemon --exec \"nearleyc grammar.ne -o grammar.js && babel-node index.js\" --watch grammar.ne --watch whatis.txt",
+		"mine": "nodemon --exec \"nearleyc src/grammar.ne -o src/grammar.js && babel-node src/index.js\" --watch src/grammar.ne --watch whatis.txt",
 		"prepublish": "npm run build"
 	},
 	"devDependencies": {
