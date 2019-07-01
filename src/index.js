@@ -98,7 +98,7 @@ function readFile(fileName) {
 		let raw = result.substring(inicios[i], fins[i])
 		// let [useless, ...lines] = raw.split('\n')
 		let lines = raw.split(/\n/)
-		let filteredLines = lines.map(l => l.substring(l.indexOf('@')).trim()).filter(l => !!l && l.indexOf('@') > -1)
+		let filteredLines = lines.map(l => l.substring(l.indexOf('@')).trim()).filter(l => !!l && l.indexOf('@') > -1 && l.indexOf('@class') == -1)
 
 		paths = [...paths, ...filteredLines]
 	}
