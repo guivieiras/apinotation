@@ -100,8 +100,6 @@ function readFile(fileName) {
 		let lines = raw.split(/\n/)
 		let filteredLines = lines.map(l => l.substring(l.indexOf('@')).trim()).filter(isMyLine)
 
-		console.log(filteredLines)
-
 		paths = [...paths, ...filteredLines]
 	}
 
