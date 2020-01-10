@@ -1,17 +1,17 @@
 {
 	"name": "apinotation",
-	"version": "1.0.28",
+	"version": "1.1.0",
 	"description": "A simple annotation processer to generate API documentation based on js comments",
-	"main": "./dist/index.js",
+	"main": "./src/index.js",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/theguii/apinotation.git"
 	},
 	"scripts": {
-		"start": "babel-node src/index.js",
-		"build": "babel ./src -d dist --copy-files && nearleyc src/grammar.ne -o dist/grammar.js",
-		"mine": "nodemon --exec \"nearleyc src/grammar.ne -o src/grammar.js && babel-node src/index.js\" --watch src/grammar.ne --watch whatis.txt",
-		"prepublish": "npm run build"
+		"start": "node -r esm src/index.js",
+		"compile": "nearleyc src/grammar.ne -o src/grammar.js",
+		"mine": "nodemon --exec \"nearleyc src/grammar.ne -o src/grammar.js && node -r esm src/index.js\" --watch src/grammar.ne --watch whatis.txt",
+		"prepublish": "npm run compile"
 	},
 	"devDependencies": {
 		"@babel/cli": "^7.4.4",
@@ -23,8 +23,9 @@
 	"author": "Guilherme Vieira",
 	"license": "GPL-3.0-or-later",
 	"dependencies": {
+		"esm": "^3.2.25",
 		"fs-extra": "^8.0.1",
-		"lodash": "^4.17.11",
+		"lodash": "^4.17.15",
 		"nearley": "^2.16.0"
 	}
 }

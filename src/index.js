@@ -39,7 +39,7 @@ export default function(routesFolder, subst, publishFolder = '/tmp/apinotation-d
 	// console.dir(parser.results[0], { depth: null })
 	// clipboardy.writeSync(JSON.stringify(parser.results[0], null, 2))
 
-	fs.copySync('node_modules/apinotation/dist/html', publishFolder)
+	fs.copySync('node_modules/apinotation/src/html', publishFolder)
 	fs.writeFileSync(publishFolder + '/resolved.js', `let resolved = ${JSON.stringify(parser.results[0], null, 2)}`, {
 		encoding: 'utf-8'
 	})
@@ -98,12 +98,24 @@ function readFile(fileName) {
 		let raw = result.substring(inicios[i], fins[i])
 		// let [useless, ...lines] = raw.split('\n')
 		let lines = raw.split(/\n/)
-		let filteredLines = lines.map(l => l.substring(l.indexOf('@')).trim()).filter(l => !!l && l.indexOf('@') > -1 && l.indexOf('@class') == -1)
+		let filteredLines = lines.map(l => l.substring(l.indexOf('@')).trim()).filter(isMyLine)
+
+		console.log(filteredLines)
 
 		paths = [...paths, ...filteredLines]
 	}
 
 	return paths
+}
+
+function isMyLine(line){
+	if (!line) return false
+
+	let list = ['@Group', '@Route', '@Params', '@Query', '@Body', '@Response', '@Header']
+	for (let item of list){
+		if (line.indexOf(item) >= 0) return true
+	}
+	return false
 }
 
 function indexesOf(string, regex) {
